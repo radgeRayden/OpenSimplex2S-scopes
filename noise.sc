@@ -487,11 +487,19 @@ for i in (range 256)
         ((i >> 6) & 3) - 1
     lattice-points @ i = (LatticePoint4D cx cy cz cw)
 
-local LOOKUP_4D : (array LatticePoint4D LOOKUP_4D_SIZE)
+local LOOKUP_4D : (Array LatticePoint4D LOOKUP_4D_SIZE)
+'resize LOOKUP_4D LOOKUP_4D_SIZE
 for trange in LOOKUP_4D_RANGES
     let start end = trange.start (trange.start + trange.len)
     for i in (range start end)
         LOOKUP_4D @ i = (lattice-points @ (lookup4D-pregen @ i))
+
+# due to a limitation of the codegen, we can't have a static initialized array of that size.
+  So we'll convert it to a global string instead, and later convert the pointer.
+local LOOKUP_4D_STORAGE =
+    string
+        (imply LOOKUP_4D pointer) as (@ i8)
+        (countof LOOKUP_4D) * (sizeof LatticePoint4D)
 
 local GRADIENTS_2D : (array Grad2 PSIZE)
 local grad2 =
@@ -766,7 +774,9 @@ run-stage;
 
 global LOOKUP_2D = LOOKUP_2D
 global LOOKUP_3D = LOOKUP_3D
-global LOOKUP_4D = LOOKUP_4D
+global LOOKUP_4D : (@ LatticePoint4D) = 
+    inline ()
+        LOOKUP_4D_STORAGE as rawstring as (@ LatticePoint4D)
 
 global GRADIENTS_2D = GRADIENTS_2D
 global GRADIENTS_3D = GRADIENTS_3D
