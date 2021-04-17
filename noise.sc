@@ -35,8 +35,8 @@ struct LatticePoint3D plain
     xrv : i32
     yrv : i32
     zrv : i32
-    next-on-failure : (@ this-type)
-    next-on-success : (@ this-type)
+    next-on-failure : usize
+    next-on-success : usize
 
     inline... __typecall (cls)
         super-type.__typecall cls
@@ -87,7 +87,7 @@ struct Grad4 plain
     dz : f64
     dw : f64
 
-global LOOKUP_2D : (array LatticePoint2D (8 * 4))
+local LOOKUP_2D : (array LatticePoint2D (8 * 4))
 for i in (range 8)
     let i1 j1 i2 j2 =
         if ((i & 1) == 0)
@@ -112,118 +112,95 @@ for i in (range 8)
     LOOKUP_2D @ (i * 4 + 2) = (typeinit i1 j1)
     LOOKUP_2D @ (i * 4 + 3) = (typeinit i2 j2)
 
-global LOOKUP_3D : (array LatticePoint3D 8)
-do
-    # in the original code, these were created with "new" for every octant. To avoid cleanup concerns I'm
-      storing them in this global array.
-    global _c : (array (array LatticePoint3D (0x0D + 1)) 8)
-    for i in (range 8)
-        let i1 j1 k1 =
-            (i >> 0) & 1
-            (i >> 1) & 1
-            (i >> 2) & 1
+local LOOKUP_3D : (array (array LatticePoint3D (0x0D + 1)) 8)
+for i in (range 8)
+    let i1 j1 k1 =
+        (i >> 0) & 1
+        (i >> 1) & 1
+        (i >> 2) & 1
 
-        let i2 j2 k2 =
-            i1 ^ 1
-            j1 ^ 1
-            k1 ^ 1
+    let i2 j2 k2 =
+        i1 ^ 1
+        j1 ^ 1
+        k1 ^ 1
 
-        c :=  _c @ i
+    c :=  LOOKUP_3D @ i
 
-        # The two points within this octant, one from each of the two cubic half-lattices.
-        c @ 0x0 = (LatticePoint3D i1 j1 k1 0)
-        c @ 0x1 = (LatticePoint3D (i1 + i2) (j1 + j2) (k1 + k2) 1)
+    # The two points within this octant, one from each of the two cubic half-lattices.
+    c @ 0x0 = (LatticePoint3D i1 j1 k1 0)
+    c @ 0x1 = (LatticePoint3D (i1 + i2) (j1 + j2) (k1 + k2) 1)
 
-        # (1, 0, 0) vs (0, 1, 1) away from octant.
-        c @ 0x2 = (LatticePoint3D (i1 ^ 1) j1 k1 0)
-        c @ 0x3 = (LatticePoint3D i1 (j1 ^ 1) (k1 ^ 1) 0)
+    # (1, 0, 0) vs (0, 1, 1) away from octant.
+    c @ 0x2 = (LatticePoint3D (i1 ^ 1) j1 k1 0)
+    c @ 0x3 = (LatticePoint3D i1 (j1 ^ 1) (k1 ^ 1) 0)
 
-        # (1, 0, 0) vs (0, 1, 1) away from octant, on second half-lattice.
-        c @ 0x4 = (LatticePoint3D (i1 + (i2 ^ 1)) (j1 + j2) (k1 + k2) 1)
-        c @ 0x5 = (LatticePoint3D (i1 + i2) (j1 + (j2 ^ 1)) (k1 + (k2 ^ 1)) 1)
+    # (1, 0, 0) vs (0, 1, 1) away from octant, on second half-lattice.
+    c @ 0x4 = (LatticePoint3D (i1 + (i2 ^ 1)) (j1 + j2) (k1 + k2) 1)
+    c @ 0x5 = (LatticePoint3D (i1 + i2) (j1 + (j2 ^ 1)) (k1 + (k2 ^ 1)) 1)
 
-        # (0, 1, 0) vs (1, 0, 1) away from octant.
-        c @ 0x6 = (LatticePoint3D i1 (j1 ^ 1) k1 0)
-        c @ 0x7 = (LatticePoint3D (i1 ^ 1) j1 (k1 ^ 1) 0)
+    # (0, 1, 0) vs (1, 0, 1) away from octant.
+    c @ 0x6 = (LatticePoint3D i1 (j1 ^ 1) k1 0)
+    c @ 0x7 = (LatticePoint3D (i1 ^ 1) j1 (k1 ^ 1) 0)
 
-        # (0, 1, 0) vs (1, 0, 1) away from octant, on second half-lattice.
-        c @ 0x8 = (LatticePoint3D (i1 + i2) (j1 + (j2 ^ 1)) (k1 + k2) 1)
-        c @ 0x9 = (LatticePoint3D (i1 + (i2 ^ 1)) (j1 + j2) (k1 + (k2 ^ 1)) 1)
+    # (0, 1, 0) vs (1, 0, 1) away from octant, on second half-lattice.
+    c @ 0x8 = (LatticePoint3D (i1 + i2) (j1 + (j2 ^ 1)) (k1 + k2) 1)
+    c @ 0x9 = (LatticePoint3D (i1 + (i2 ^ 1)) (j1 + j2) (k1 + (k2 ^ 1)) 1)
 
-        # (0, 0, 1) vs (1, 1, 0) away from octant.
-        c @ 0xA = (LatticePoint3D i1 j1 (k1 ^ 1) 0)
-        c @ 0xB = (LatticePoint3D (i1 ^ 1) (j1 ^ 1) k1 0)
+    # (0, 0, 1) vs (1, 1, 0) away from octant.
+    c @ 0xA = (LatticePoint3D i1 j1 (k1 ^ 1) 0)
+    c @ 0xB = (LatticePoint3D (i1 ^ 1) (j1 ^ 1) k1 0)
 
-        # (0, 0, 1) vs (1, 1, 0) away from octant, on second half-lattice.
-        c @ 0xC = (LatticePoint3D (i1 + i2) (j1 + j2) (k1 + (k2 ^ 1)) 1)
-        c @ 0xD = (LatticePoint3D (i1 + (i2 ^ 1)) (j1 + (j2 ^ 1)) (k1 + k2) 1)
+    # (0, 0, 1) vs (1, 1, 0) away from octant, on second half-lattice.
+    c @ 0xC = (LatticePoint3D (i1 + i2) (j1 + j2) (k1 + (k2 ^ 1)) 1)
+    c @ 0xD = (LatticePoint3D (i1 + (i2 ^ 1)) (j1 + (j2 ^ 1)) (k1 + k2) 1)
 
-        let c0 c1 c2 c3 c4 c5 c6 c7 c8 c9 cA cB cC cD =
-            va-map
-                inline (i)
-                    c @ i
-                va-range (0x0D + 1)
+    let c0 c1 c2 c3 c4 c5 c6 c7 c8 c9 cA cB cC cD =
+        va-map
+            inline (i)
+                c @ i
+            va-range (0x0D + 1)
 
-        # First two points are guaranteed.
-        c0.next-on-failure = &c1 
-        c0.next-on-success = &c1
-        c1.next-on-failure = &c2 
-        c1.next-on-success = &c2
+    # First two points are guaranteed.
+    c0.next-on-failure = 0x1 
+    c0.next-on-success = 0x1
+    c1.next-on-failure = 0x2 
+    c1.next-on-success = 0x2
 
-        # If c2 is in range, then we know c3 and c4 are not.
-        c2.next-on-failure = &c3
-        c2.next-on-success = &c5
-        c3.next-on-failure = &c4
-        c3.next-on-success = &c4
+    # If c2 is in range, then we know c3 and c4 are not.
+    c2.next-on-failure = 0x3
+    c2.next-on-success = 0x5
+    c3.next-on-failure = 0x4
+    c3.next-on-success = 0x4
 
-        # If c4 is in range, then we know c5 is not.
-        c4.next-on-failure = &c5 
-        c4.next-on-success = &c6
-        c5.next-on-failure = &c6 
-        c5.next-on-success = &c6
+    # If c4 is in range, then we know c5 is not.
+    c4.next-on-failure = 0x5 
+    c4.next-on-success = 0x6
+    c5.next-on-failure = 0x6 
+    c5.next-on-success = 0x6
 
-        # If c6 is in range, then we know c7 and c8 are not.
-        c6.next-on-failure = &c7
-        c6.next-on-success = &c9
-        c7.next-on-failure = &c8
-        c7.next-on-success = &c8
+    # If c6 is in range, then we know c7 and c8 are not.
+    c6.next-on-failure = 0x7
+    c6.next-on-success = 0x9
+    c7.next-on-failure = 0x8
+    c7.next-on-success = 0x8
 
-        # If c8 is in range, then we know c9 is not.
-        c8.next-on-failure = &c9
-        c8.next-on-success = &cA
-        c9.next-on-failure = &cA
-        c9.next-on-success = &cA
+    # If c8 is in range, then we know c9 is not.
+    c8.next-on-failure = 0x9
+    c8.next-on-success = 0xA
+    c9.next-on-failure = 0xA
+    c9.next-on-success = 0xA
 
-        # If cA is in range, then we know cB and cC are not.
-        cA.next-on-failure = &cB
-        cA.next-on-success = &cD
-        cB.next-on-failure = &cC
-        cB.next-on-success = &cC
+    # If cA is in range, then we know cB and cC are not.
+    cA.next-on-failure = 0xB
+    cA.next-on-success = 0xD
+    cB.next-on-failure = 0xC
+    cB.next-on-success = 0xC
 
-        # If cC is in range, then we know cD is not.
-        cC.next-on-failure = &cD 
-        cC.next-on-success = null
-        cD.next-on-failure = null 
-        cD.next-on-success = null
-
-        LOOKUP_3D @ i = (c @ 0x0)
-
-inline make-i32-Array (...)
-    local arr : (Array i32)
-    va-map
-        inline (x)
-            'append arr x
-        ...
-    arr
-
-# local LOOKUP_4D_RANGES : (array (tuple i32 i32) 256)
-# local lookup4D-pregen : (Array i32)
-# inline add-lookup4D-pregen-entry (entry values...)
-#     LOOKUP_4D_RANGES @ entry = (tupleof (countof lookup4D-pregen) (va-countof values...))
-#     va-map
-#         inline (v)
-#             'append lookup4D-pregen v
-#         values...
+    # If cC is in range, then we know cD is not.
+    cC.next-on-failure = 0xD 
+    cC.next-on-success = -1:usize
+    cD.next-on-failure = -1:usize 
+    cD.next-on-success = -1:usize
 
 let lookup4D-index-tables =
     sugar-quote
@@ -485,7 +462,7 @@ let lookup4D-index-tables =
         0x55 0x56 0x59 0x5A 0x65 0x66 0x69 0x6A 0x95 0x96 0x99 0x9A 0xA5 0xA6 0xA9 0xAA 0xAB 0xAE 0xBA 0xEA 
 
 # conceptually the 4D LUT is 2-dimensional, but we flatten it and save the ranges to have a constant array size.
-global LOOKUP_4D_RANGES : (array (tuple (start = i32) (len = i32)) 256)
+local LOOKUP_4D_RANGES : (array (tuple (start = i32) (len = i32)) 256)
 local lookup4D-pregen : (Array i32)
 let LOOKUP_4D_SIZE =
     fold (count = 0) for i t in (enumerate lookup4D-index-tables)
@@ -500,6 +477,7 @@ let LOOKUP_4D_SIZE =
         count + size
 run-stage;
 
+global LOOKUP_4D_RANGES = LOOKUP_4D_RANGES
 local lattice-points : (array LatticePoint4D 256)
 for i in (range 256)
     let cx cy cz cw =
@@ -509,13 +487,13 @@ for i in (range 256)
         ((i >> 6) & 3) - 1
     lattice-points @ i = (LatticePoint4D cx cy cz cw)
 
-global LOOKUP_4D : (array LatticePoint4D LOOKUP_4D_SIZE)
+local LOOKUP_4D : (array LatticePoint4D LOOKUP_4D_SIZE)
 for trange in LOOKUP_4D_RANGES
     let start end = trange.start (trange.start + trange.len)
     for i in (range start end)
         LOOKUP_4D @ i = (lattice-points @ (lookup4D-pregen @ i))
 
-global GRADIENTS_2D : (array Grad2 PSIZE)
+local GRADIENTS_2D : (array Grad2 PSIZE)
 local grad2 =
     arrayof Grad2
         Grad2 0.130526192220052:f64  0.99144486137381:f64
@@ -549,8 +527,9 @@ for g in grad2
 
 for i el in (enumerate GRADIENTS_2D)
     el = grad2 @ (i % (countof grad2))
+deref GRADIENTS_2D
 
-global GRADIENTS_3D : (array Grad3 PSIZE)
+local GRADIENTS_3D : (array Grad3 PSIZE)
 local grad3 =
     arrayof Grad3
         Grad3 -2.22474487139:f64      -2.22474487139:f64      -1.0:f64
@@ -610,7 +589,7 @@ for g in grad3
 for i el in (enumerate GRADIENTS_3D)
     el = grad3 @ (i % (countof grad3))
 
-global GRADIENTS_4D : (array Grad4 PSIZE)
+local GRADIENTS_4D : (array Grad4 PSIZE)
 local grad4 =
     arrayof Grad4
         Grad4 -0.753341017856078:f64    -0.37968289875261624:f64  -0.37968289875261624:f64  -0.37968289875261624:f64
@@ -783,6 +762,16 @@ for g in grad4
 for i el in (enumerate GRADIENTS_4D)
     el = grad4 @ (i % (countof grad4))
 
+run-stage;
+
+global LOOKUP_2D = LOOKUP_2D
+global LOOKUP_3D = LOOKUP_3D
+global LOOKUP_4D = LOOKUP_4D
+
+global GRADIENTS_2D = GRADIENTS_2D
+global GRADIENTS_3D = GRADIENTS_3D
+global GRADIENTS_4D = GRADIENTS_4D
+
 fn noise2-base (gen xs ys)
     """"2D SuperSimplex noise base.
         Lookup table implementation inspired by DigitalShadow.
@@ -845,14 +834,16 @@ fn noise3-BCC (gen xr yr zr)
 
     # Point contributions
     local value : f64
-    local c : (@ LatticePoint3D) = (& (LOOKUP_3D @ index))
-    while (c != null)
+
+    local next = 0:usize
+    while (next != -1:usize)
+        c := (LOOKUP_3D @ index @ next)
         dxr := xri + c.dxr
         dyr := yri + c.dyr
         dzr := zri + c.dzr
         attn := 0.75 - dxr * dxr - dyr * dyr - dzr * dzr
         if (attn < 0)
-            c = c.next-on-failure
+            next = c.next-on-failure
         else
             pxm := (xrb + c.xrv) & PMASK
             pym := (yrb + c.yrv) & PMASK
@@ -864,7 +855,7 @@ fn noise3-BCC (gen xr yr zr)
 
             attn := attn * attn
             value += attn * attn * extrapolation
-            c = c.next-on-success
+            next = c.next-on-success
     value
 
 fn noise4-base (gen xs ys zs ws)
@@ -968,7 +959,6 @@ struct OpenSimplex2S
             let r =
                 ? (r < 0) (r + i + 1) r
             let r2 = (copy r)
-            # print seed r1 r2
 
             let perm = self._perm
             perm @ i = (source @ r)
