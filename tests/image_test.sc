@@ -14,47 +14,66 @@ fn... write-image (name : rawstring, w, h, data)
     stdio.fwrite ((imply data pointer) as (mutable@ void)) 1 (countof data) file
     stdio.fclose file
 
-fn main (argc argv)
-    let gen = (noise.OpenSimplex2S 0)
-    let w h = 600 600
-    let ox oy oz ow = 300:f64 300:f64 0:f64 0:f64
-    let scale = 100:f64
+fn luminosity (v)
+    let vrange = 2.0
+    normalized := (v + (vrange / 2)) / vrange
+    (normalized * 255) as u8
 
+let img-width img-height zdepth wdepth = 600 600 5 5
+let ox oy oz ow = 300:f64 300:f64 400:f64 400:f64
+let sx sy sz sw = .01:f64 .01:f64 .1:f64 .1:f64
+global generator : noise.OpenSimplex2S 0
+
+inline test2D (name noisef)
     local values : (Array u8)
+    'reserve values (img-width * img-height)
 
-    fn luminosity (v)
-        let vrange = 2.0
-        normalized := (v + (vrange / 2)) / vrange
-        (normalized * 255) as u8
-
-    for x y in (dim w h)
+    for x y in (dim img-width img-height)
         x as:= f64
         y as:= f64
-        let v = ('noise2-XbeforeY gen ((x + ox) / scale) ((y + oy) / scale))
+        let v = (noisef generator ((x + ox) * sx) ((y + oy) * sy))
         'append values (luminosity v)
+    write-image name img-width img-height values
 
-    write-image "2dnoise.pgm" w h values
+inline test3D (name noisef)
+    local values : (Array u8)
+    'reserve values (img-width * img-height * zdepth)
 
-    'clear values
-    let zdepth = 5
-    for x y z in (dim w h zdepth)
+    for x y z in (dim img-width img-height zdepth)
         x as:= f64
         y as:= f64
         z as:= f64
-        let v = ('noise3-XYbeforeZ gen ((x + ox) / scale) ((y + oy) / scale) (((z * 10) + oz) / scale))
+        let v = (noisef generator ((x + ox) * sx) ((y + oy) * sy) ((z + oz) * sz))
         'append values (luminosity v)
-    write-image "3dnoise.pgm" w (h * zdepth) values
+    write-image name img-width (img-height * zdepth) values
 
-    'clear values
-    let wdepth = 5
-    for x w y z in (dim w wdepth h zdepth)
+inline test4D (name noisef)
+    local values : (Array u8)
+    'reserve values (img-width * img-height * zdepth)
+
+    for x w y z in (dim img-width wdepth img-height zdepth)
         x as:= f64
         y as:= f64
         z as:= f64
         w as:= f64
-        let v = ('noise4-XYZbeforeW gen ((x + ox) / scale) ((y + oy) / scale) (((z * 10) + oz) / scale) (((w * 10) + ow) / scale))
+        let v = (noisef generator ((x + ox) * sx) ((y + oy) * sy) ((z + oz) * sz) ((w + ow) * sw))
         'append values (luminosity v)
-    write-image "4dnoise.pgm" (w * wdepth) (h * zdepth) values
+    write-image name (img-width * wdepth) (img-height * zdepth) values
+
+fn main (argc argv)
+    let OS2 = noise.OpenSimplex2S
+
+    test2D "noise2.pgm" OS2.noise2
+    test2D "noise2-XbeforeY.pgm" OS2.noise2-XbeforeY
+
+    test3D "noise3-classic.pgm" OS2.noise3-classic
+    test3D "noise3-XYbeforeZ.pgm" OS2.noise3-XYbeforeZ
+    test3D "noise3-XZbeforeY.pgm" OS2.noise3-XZbeforeY 
+
+    test4D "noise4-classic.pgm" OS2.noise4-classic
+    test4D "noise4-XYbeforeZW.pgm" OS2.noise4-XYbeforeZW
+    test4D "noise4-XZbeforeYW.pgm" OS2.noise4-XZbeforeYW 
+    test4D "noise4-XYZbeforeW.pgm" OS2.noise4-XYZbeforeW
 
     0
 

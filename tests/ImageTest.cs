@@ -1,11 +1,30 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using Noise;
 
 namespace ImageTest
 {
+    public delegate double Noise2D(double x, double y);
+    public delegate double Noise3D(double x, double y, double z);
+    public delegate double Noise4D(double x, double y, double z, double w);
+
     class Program
     {
-        static void writeImage(string name, int w, int h, byte[] data)
+        static OpenSimplex2S generator = new OpenSimplex2S(0);
+        const int imgWidth = 600;
+        const int imgHeight = 600;
+        const int zdepth = 5;
+        const int wdepth = 5;
+        const int ox = 300;
+        const int oy = 300;
+        const int oz = 400;
+        const int ow = 400;
+        const double sx = .01;
+        const double sy = .01;
+        const double sz = .1;
+        const double sw = .1;
+
+        static void writeImage(string name, int w, int h, List<byte> data)
         {
             var writer = new StreamWriter(name);
             writer.Write($"P5 {w} {h} 255 ");
@@ -18,76 +37,83 @@ namespace ImageTest
             }
             binWriter.Close();
         }
-        
-        static byte toLuminosity (double x)
+
+        static byte toLuminosity(double x)
         {
             var vrange = 2.0;
             var normalized = (x + (vrange / 2)) / vrange;
             return (byte)(normalized * 255);
         }
 
-
-        static void Main(string[] args)
+        static void test2D(string name, Noise2D noisef)
         {
-            var generator = new OpenSimplex2S(0);
-            var width = 600;
-            var height = 600;
-            var ox = 300;
-            var oy = 300;
-            var oz = 0;
-            var ow = 0;
-            var scale = 100.0;
+            var data = new List<byte>();
 
-            // 2D noise
-            var data = new byte[width * height];
-
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < imgHeight; y++)
             {
-                for (int x = 0; x < width; x++)
+                for (int x = 0; x < imgWidth; x++)
                 {
-                    var v = generator.Noise2_XBeforeY((x + ox) / scale, (y + oy) / scale);
-                    data[y * width + x] = toLuminosity(v);
+                    var v = noisef((x + ox) * sx, (y + oy) * sy);
+                    data.Add(toLuminosity(v));
                 }
             }
-            writeImage("2dnoise.pgm", width, height, data);
 
-            // 3D noise
-            var zdepth = 5;
-            var height3 = height * zdepth;
-            data = new byte[width * height3];
+            writeImage(name, imgWidth, imgHeight, data);
+        }
+
+        static void test3D(string name, Noise3D noisef) 
+        { 
+            var data = new List<byte>();
 
             for (int z = 0; z < zdepth; z++)
             {
-                for (int y = 0; y < height; y++)
+                for (int y = 0; y < imgHeight; y++)
                 {
-                    for (int x = 0; x < width; x++)
+                    for (int x = 0; x < imgWidth; x++)
                     {
-                        var v = generator.Noise3_XYBeforeZ((x + ox) / scale, (y + oy) / scale, (z * 10 + oz) / scale);
-                        data[height * width * z + y * width + x] = toLuminosity(v);
+                        var v = noisef((x + ox) * sx, (y + oy) * sy, (z + oz) * sz);
+                        data.Add(toLuminosity(v));
                     }
                 }
             }
-            writeImage("3dnoise.pgm", width, height3, data);
 
-            // 4D noise
-            var wdepth = 5;
-            var width4 = width * wdepth;
-            data = new byte[width4 * height3];
+            writeImage(name, imgWidth, imgHeight * zdepth, data);
+        }
+        static void test4D(string name, Noise4D noisef) 
+        { 
+            var data = new List<byte>();
+
             for (int z = 0; z < zdepth; z++)
             {
-                for (int w = 0; w < wdepth; w++)
+                for (int y = 0; y < imgHeight; y++)
                 {
-                    for (int y = 0; y < height; y++)
+                    for (int w = 0; w < wdepth; w++)
                     {
-                        for (int x = 0; x < width; x++)
+                        for (int x = 0; x < imgWidth; x++)
                         {
-                            var v = generator.Noise4_XYZBeforeW((x + ox) / scale, (y + oy) / scale, (z * 10 + oz) / scale, (w * 10 + ow) / scale);
-                            data[width4 * height * z + width4 * y + width * w + x] = toLuminosity(v);
+                            var v = noisef((x + ox) * sx, (y + oy) * sy, (z + oz) * sz, (w + ow) * sw);
+                            data.Add(toLuminosity(v));
                         }
                     }
                 }
             }
-            writeImage("4dnoise.pgm", width4, height3, data);
+
+            writeImage(name, imgWidth * wdepth, imgHeight * zdepth, data);
+        }
+
+        static void Main(string[] args)
+        {
+            test2D("noise2.pgm", generator.Noise2);
+            test2D("noise2-XbeforeY.pgm", generator.Noise2_XBeforeY);
+
+            test3D("noise3-classic.pgm", generator.Noise3_Classic);
+            test3D("noise3-XYbeforeZ.pgm", generator.Noise3_XYBeforeZ);
+            test3D("noise3-XZbeforeY.pgm", generator.Noise3_XZBeforeY);
+
+            test4D("noise4-classic.pgm", generator.Noise4_Classic);
+            test4D("noise4-XYbeforeZW.pgm", generator.Noise4_XYBeforeZW);
+            test4D("noise4-XZbeforeYW.pgm", generator.Noise4_XZBeforeYW);
+            test4D("noise4-XYZbeforeW.pgm", generator.Noise4_XYZBeforeW);
         }
     }
 }

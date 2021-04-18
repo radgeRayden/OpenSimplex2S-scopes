@@ -1,0 +1,9 @@
+00ab66fb8752125cd52fc8cc2f7a1ca2e0870721  noise2-XbeforeY.pgm
+8fe084499b5d56660031964667c85071f950b785  noise2.pgm
+8a5c9ef9464a4c9b5a595b9f2ee74b3e6cb76108  noise3-classic.pgm
+e2ea1a4f5ce8f22a5dbbcc409147d283f1863848  noise3-XYbeforeZ.pgm
+f414f65bc7ecc5b42f431841c53b586d659c413d  noise3-XZbeforeY.pgm
+e319aecddd8ac2571b731a730856420ccf525959  noise4-classic.pgm
+4b7451226ea5d41a5f271d30c82e1a57d368dc47  noise4-XYbeforeZW.pgm
+9c48356abf46d7181899de590943e314374b302b  noise4-XYZbeforeW.pgm
+ff9a3ab0247232c61ceb70bb60a6bda8d11b4d58  noise4-XZbeforeYW.pgm

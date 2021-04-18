@@ -950,10 +950,14 @@ struct OpenSimplex2S
         local self =
             super-type.__typecall cls
 
-        'resize self._perm PSIZE
-        'resize self._perm-grad2 PSIZE
-        'resize self._perm-grad3 PSIZE
-        'resize self._perm-grad4 PSIZE
+        local _perm : (Array i16 PSIZE)
+        local _perm-grad2 : (Array Grad2 PSIZE)
+        local _perm-grad3 : (Array Grad3 PSIZE)
+        local _perm-grad4 : (Array Grad4 PSIZE)
+        'resize _perm PSIZE
+        'resize _perm-grad2 PSIZE
+        'resize _perm-grad3 PSIZE
+        'resize _perm-grad4 PSIZE
 
         local source : (Array i16 PSIZE)
         'resize source PSIZE
@@ -970,13 +974,17 @@ struct OpenSimplex2S
                 ? (r < 0) (r + i + 1) r
             let r2 = (copy r)
 
-            let perm = self._perm
-            perm @ i = (source @ r)
-            self._perm-grad2 @ i = (GRADIENTS_2D @ (perm @ i))
-            self._perm-grad3 @ i = (GRADIENTS_3D @ (perm @ i))
-            self._perm-grad4 @ i = (GRADIENTS_4D @ (perm @ i))
+            _perm @ i = (source @ r)
+            _perm-grad2 @ i = (GRADIENTS_2D @ (_perm @ i))
+            _perm-grad3 @ i = (GRADIENTS_3D @ (_perm @ i))
+            _perm-grad4 @ i = (GRADIENTS_4D @ (_perm @ i))
             source @ r = (source @ i)
-        self
+
+        super-type.__typecall cls
+            _perm = _perm
+            _perm-grad2 = _perm-grad2
+            _perm-grad3 = _perm-grad3
+            _perm-grad4 = _perm-grad4
 
     fn noise2 (self x y)
         """"2D SuperSimplex noise, standard lattice orientation.
