@@ -494,8 +494,9 @@ for trange in LOOKUP_4D_RANGES
     for i in (range start end)
         LOOKUP_4D @ i = (lattice-points @ (lookup4D-pregen @ i))
 
-# due to a limitation of the codegen, we can't have a static initialized array of that size.
-  So we'll convert it to a global string instead, and later convert the pointer.
+# This workaround is necessary due to a current codegen limitation that blows up compile times for
+  big mutable variables. Since global strings don't suffer from this problem, we'll use one as intermediary
+  storage and convert back with static initialization.
 local LOOKUP_4D_STORAGE =
     string
         (imply LOOKUP_4D pointer) as (@ i8)
