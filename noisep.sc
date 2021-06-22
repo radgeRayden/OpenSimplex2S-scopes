@@ -21,7 +21,9 @@ sugar-if main-module?
                 OS2noise3classic = (static-typify OpenSimplex2S.noise3-classic OpenSimplex2S f64 f64 f64)
                 OS2noise3XYbeforeZ = (static-typify OpenSimplex2S.noise3-XYbeforeZ OpenSimplex2S f64 f64 f64)
                 OS2noise3XZbeforeY = (static-typify OpenSimplex2S.noise3-XZbeforeY OpenSimplex2S f64 f64 f64)
+                OS2noise4classic = (static-typify OpenSimplex2S.noise4-classic OpenSimplex2S f64 f64 f64 f64)
                 OS2noise4XYbeforeZW = (static-typify OpenSimplex2S.noise4-XYbeforeZW OpenSimplex2S f64 f64 f64 f64)
+                OS2noise4XZbeforeYW = (static-typify OpenSimplex2S.noise4-XZbeforeYW OpenSimplex2S f64 f64 f64 f64)
                 OS2noise4XYZbeforeW = (static-typify OpenSimplex2S.noise4-XYZbeforeW OpenSimplex2S f64 f64 f64 f64)
             locals;            
         'O2
@@ -55,10 +57,12 @@ else
             (extern 'OS2noise_new (function (uniqueof this-type -1) u64)) seed
         let noise2 = (extern 'OS2noise2 (function f64 (viewof this-type) f64 f64))
         let noise2-XbeforeY = (extern 'OS2noise2XbeforeY (function f64 (viewof this-type) f64 f64))
-        let noise3-classic = (extern 'OS2noise3classic (function f64 (viewof this-type) f64 f64))
+        let noise3-classic = (extern 'OS2noise3classic (function f64 (viewof this-type) f64 f64 f64))
         let noise3-XYbeforeZ = (extern 'OS2noise3XYbeforeZ (function f64 (viewof this-type) f64 f64 f64))
         let noise3-XZbeforeY = (extern 'OS2noise3XZbeforeY (function f64 (viewof this-type) f64 f64 f64))
+        let noise4-classic = (extern 'OS2noise4classic (function f64 (viewof this-type) f64 f64 f64 f64))
         let noise4-XYbeforeZW = (extern 'OS2noise4XYbeforeZW (function f64 (viewof this-type) f64 f64 f64 f64))
+        let noise4-XZbeforeYW = (extern 'OS2noise4XZbeforeYW (function f64 (viewof this-type) f64 f64 f64 f64))
         let noise4-XYZbeforeW = (extern 'OS2noise4XYZbeforeW (function f64 (viewof this-type) f64 f64  f64  f64))
 
     do
