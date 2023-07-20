@@ -6,12 +6,13 @@ using import UTF-8
 import ..noise
 import .stdio
 
-fn... write-image (name : rawstring, w, h, data)
+fn write-image (name w h data)
     let file = (stdio.fopen name "wb")
     assert (file != null)
 
-    stdio.fprintf file ("P5 %d %d 255 " as rawstring) w h
-    stdio.fwrite ((imply data pointer) as (mutable@ void)) 1 (countof data) file
+    stdio.fprintf file "P5 %d %d 255 " w h
+    ptr count := 'data data
+    stdio.fwrite ptr 1 count file
     stdio.fclose file
 
 fn luminosity (v)
@@ -63,24 +64,27 @@ inline test4D (name noisef)
 fn main (argc argv)
     let OS2 = noise.OpenSimplex2S
 
-    test2D "noise2.pgm" OS2.noise2
-    test2D "noise2-XbeforeY.pgm" OS2.noise2-XbeforeY
+    test2D S"noise2.pgm" OS2.noise2
+    test2D S"noise2-XbeforeY.pgm" OS2.noise2-XbeforeY
 
-    test3D "noise3-classic.pgm" OS2.noise3-classic
-    test3D "noise3-XYbeforeZ.pgm" OS2.noise3-XYbeforeZ
-    test3D "noise3-XZbeforeY.pgm" OS2.noise3-XZbeforeY 
+    test3D S"noise3-classic.pgm" OS2.noise3-classic
+    test3D S"noise3-XYbeforeZ.pgm" OS2.noise3-XYbeforeZ
+    test3D S"noise3-XZbeforeY.pgm" OS2.noise3-XZbeforeY
 
-    test4D "noise4-classic.pgm" OS2.noise4-classic
-    test4D "noise4-XYbeforeZW.pgm" OS2.noise4-XYbeforeZW
-    test4D "noise4-XZbeforeYW.pgm" OS2.noise4-XZbeforeYW 
-    test4D "noise4-XYZbeforeW.pgm" OS2.noise4-XYZbeforeW
+    test4D S"noise4-classic.pgm" OS2.noise4-classic
+    test4D S"noise4-XYbeforeZW.pgm" OS2.noise4-XYbeforeZW
+    test4D S"noise4-XZbeforeYW.pgm" OS2.noise4-XZbeforeYW
+    test4D S"noise4-XYZbeforeW.pgm" OS2.noise4-XYZbeforeW
 
     0
 
 RUN? := false
 
 using import compiler.target.C
-if RUN?
+# hook-compile-function;
+run-stage;
+
+static-if RUN?
     main 0 0
 else
     compile-object
@@ -90,4 +94,4 @@ else
         do
             let main = (static-typify main i32 (mutable@ rawstring))
             locals;
-        'O2
+        'O3
