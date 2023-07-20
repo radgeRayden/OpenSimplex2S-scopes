@@ -77,12 +77,17 @@ fn main (argc argv)
 
     0
 
-main 0 0
+RUN? := false
 
-# compile-object
-#     default-target-triple
-#     compiler-file-kind-object
-#     "test.o"
-#     do
-#         let main = (static-typify main i32 (mutable@ rawstring))
-#         locals;
+using import compiler.target.C
+if RUN?
+    main 0 0
+else
+    compile-object
+        default-target-triple
+        compiler-file-kind-object
+        "test.o"
+        do
+            let main = (static-typify main i32 (mutable@ rawstring))
+            locals;
+        'O2
