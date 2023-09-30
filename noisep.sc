@@ -1,9 +1,5 @@
 # precompiled version
 sugar-if main-module?
-    set-globals!    
-        'bind (globals) 'assert
-            (...) -> ()
-    run-stage;
     using import .noise
     compile-object
         default-target-triple
